@@ -11,32 +11,71 @@ function load() {
   currentLevel = 0;
   numChildren = 0;
   var searchQuery = "Australia"
-  var query = "http://api.geonames.org/searchJSON?featureCode=PCLI&name=" + searchQuery + "&username=sytheris";
-  console.log(query);
+  var query = "http://api.geonames.org/searchJSON?featureCode=PCLI&username=sytheris&name=" + searchQuery;
+  //console.log(query);
   $.getJSON(query, function(json) {
     creditUsed++;
     var country = json.geonames[0];
-    console.log(json);
-    getChildren(country.geonameId, 0, 0); 
-    /*
-    for (var i = 0; i < country.length; i++) {
-      var child = country[i];
-      console.log(child);
-      console.log("name: " + child.name);
-      console.log("id: " + child.geonameId);
-      console.log("coordinates: " + child.lat + ", " + child.lng);
-      for (key in child) {
-        console.log("key is " + key);
-        console.log("value is " + child[key]);
-      }
-    }
-    */
-    console.log("credit used for search: " + creditUsed);
+    //console.log(json);
+    getStates(country.geonameId, country.name); 
+    //console.log("credit used for search: " + creditUsed);
   });
-  
-  console.log("we are at the very end here! :)");
 }
 
+function getStates(id, country) {
+  var query = "http://api.geonames.org/childrenJSON?username=sytheris&geonameId=" + id;
+  
+  $.getJSON(query, function(json) {
+    creditUsed++;
+
+    //console.log(json);
+    //console.log(json.totalResultsCount);
+    states = json.geonames;
+    for (var i = 0; i < states.length; i++) {
+      var state = states[i];
+      //console.log(state);
+      getProvinces(state.geonameId, country, state.name);
+    }
+  });
+
+}
+
+function getProvinces(id, country, state) {
+  var query = "http://api.geonames.org/childrenJSON?username=sytheris&geonameId=" + id;
+  //console.log(query);
+  
+  $.getJSON(query, function(json) {
+    var provinces = json.geonames;
+    for (var i = 0; i < provinces.length; i++) {
+      var province = provinces[i];
+      //console.log(province);
+      resolveTips(province.geonameId, country, state, province.name);
+    }
+  });
+}
+
+function resolveTips(id, country, state, province) {
+  var query = "http://api.geonames.org/childrenJSON?username=sytheris&geonameId=" + id;
+  var br = " / ";
+  //console.log(query);
+ 
+  $.getJSON(query, function(json) {
+    if (json.totalResultsCount == 0) {
+      console.log(country + br + state + br + province);
+    }
+    else {
+      var tips = json.geonames;
+      for (var i = 0; i < tips.length; i++) {
+        var tip = tips[i];
+        //console.log(tip);
+        console.log(country + br + state + br + province + br + tip.name);
+      }
+    }
+  });
+
+}
+
+/*
 function getChildren(guardian, depth, index) {
   console.log("Guardian: " + guardian + " depth: " + depth + " index: " + index);
   var query = "http://api.geonames.org/childrenJSON?geonameId=" + guardian + "&username=sytheris";
@@ -67,7 +106,7 @@ function getChildren(guardian, depth, index) {
     console.log("credit used for children: " + creditUsed);
   }); 
 }
-
+*/
 /*
  for when I overload it
 bject {status: Object}status: Objectmessage: "the hourly limit of 2000 credits for sytheris has been exceeded. Please throttle your requests or use the commercial service."value: 19
