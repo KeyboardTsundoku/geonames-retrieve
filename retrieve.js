@@ -3,74 +3,102 @@ var creditUsed;
 var currentLevel;
 var numChildren;
 
-var listPlaces = [];
+function getCountryInfo() {
+  var searchQuery = "Australia";
 
+  getCountry(searchQuery, function(countryInfo) {
+    console.log(countryInfo);
+    console.log(JSON.stringify(countryInfo));
+  });
+}
 
-function load() {
+function getCountry(searchQuery, res) {
   creditUsed = 0;
   currentLevel = 0;
   numChildren = 0;
-  var searchQuery = "Australia"
   var query = "http://api.geonames.org/searchJSON?featureCode=PCLI&username=sytheris&name=" + searchQuery;
   //console.log(query);
   $.getJSON(query, function(json) {
     creditUsed++;
+    var countryInfo = {};
     var country = json.geonames[0];
+    countryInfo[country.name] = [];
     //console.log(json);
-    getStates(country.geonameId, country.name); 
+    getStates(country.geonameId, country.name, function(states) {
+      countryInfo[country.name] = states; 
+      res(countryInfo);
+    });
+    //countryInfo.country.name; 
     //console.log("credit used for search: " + creditUsed);
   });
 }
 
-function getStates(id, country) {
+function getStates(id, country, res) {
   var query = "http://api.geonames.org/childrenJSON?username=sytheris&geonameId=" + id;
-  
   $.getJSON(query, function(json) {
     creditUsed++;
-
+    var temp = [];
     //console.log(json);
     //console.log(json.totalResultsCount);
     states = json.geonames;
+
+    // there is a .each function or something that you have to use to apply callbacks to eveything
     for (var i = 0; i < states.length; i++) {
       var state = states[i];
       //console.log(state);
-      getProvinces(state.geonameId, country, state.name);
+      temp.push(state.name);
+      getProvinces(state.geonameId, country, state.name, function(state, provinces) {
+        temp[state] = provinces;
+        console.log(state + " has been processed!");
+      });
     }
+    res(temp);
+    //console.log(countryInfo);
   });
 
 }
 
-function getProvinces(id, country, state) {
+function getProvinces(id, country, state, res) {
   var query = "http://api.geonames.org/childrenJSON?username=sytheris&geonameId=" + id;
   //console.log(query);
   
   $.getJSON(query, function(json) {
+    creditUsed++;
+    var temp = [];
     var provinces = json.geonames;
     for (var i = 0; i < provinces.length; i++) {
       var province = provinces[i];
       //console.log(province);
-      resolveTips(province.geonameId, country, state, province.name);
+      temp.push(province.name);
+      resolveTips(province.geonameId, country, state, province, function(province, tip) {
+        temp[province] = tip;
+      });
     }
+    res(state, temp);
   });
 }
 
-function resolveTips(id, country, state, province) {
+function resolveTips(id, country, state, province, res) {
   var query = "http://api.geonames.org/childrenJSON?username=sytheris&geonameId=" + id;
   var br = " / ";
   //console.log(query);
  
   $.getJSON(query, function(json) {
+    var temp = [];
     if (json.totalResultsCount == 0) {
-      console.log(country + br + state + br + province);
+      //console.log(country + br + state + br + province);
+      temp.push(province);
     }
     else {
       var tips = json.geonames;
       for (var i = 0; i < tips.length; i++) {
         var tip = tips[i];
+        temp.push(tip);
         //console.log(tip);
-        console.log(country + br + state + br + province + br + tip.name);
+        //console.log(country + br + state + br + province + br + tip.name);
       }
     }
+    res(province, temp);
   });
 
 }
