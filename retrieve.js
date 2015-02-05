@@ -6,10 +6,14 @@ var numChildren;
 function getCountryInfo() {
   var searchQuery = "Australia";
 
+  console.time("Country JSON");
   getCountry(searchQuery, function(countryInfo) {
     console.log(countryInfo);
+    console.dir(countryInfo);
     console.log(JSON.stringify(countryInfo));
   });
+
+  console.timeEnd("Country JSON");
 }
 
 function getCountry(searchQuery, res) {
@@ -26,10 +30,10 @@ function getCountry(searchQuery, res) {
     //console.log(json);
     getStates(country.geonameId, country.name, function(states) {
       countryInfo[country.name] = states; 
-      res(countryInfo);
     });
     //countryInfo.country.name; 
     //console.log("credit used for search: " + creditUsed);
+    res(countryInfo);
   });
 }
 
@@ -49,9 +53,10 @@ function getStates(id, country, res) {
       temp.push(state.name);
       getProvinces(state.geonameId, country, state.name, function(state, provinces) {
         temp[state] = provinces;
-        console.log(state + " has been processed!");
+        //console.log(state + " has been processed!");
       });
     }
+    console.log(JSON.stringify(temp));
     res(temp);
     //console.log(countryInfo);
   });
@@ -71,7 +76,7 @@ function getProvinces(id, country, state, res) {
       //console.log(province);
       temp.push(province.name);
       resolveTips(province.geonameId, country, state, province, function(province, tip) {
-        temp[province] = tip;
+        temp[province.name] = tip;
       });
     }
     res(state, temp);
