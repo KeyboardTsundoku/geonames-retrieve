@@ -45,7 +45,7 @@ function getStates(query, callback) {
     for (index in states) {
       var state = states[index];
       //console.log(state);
-      countryInfo[country].push(state.name);
+      countryInfo[country].push(state);
       countryInfo[state.name] = [];
     }
     callback(null, states);
@@ -59,7 +59,7 @@ function processState(state, callback) {
     for (index in provinces) {
       var province = provinces[index];
       //console.log("inserting " + province.name + "to " + state.name);
-      countryInfo[state.name].push(province.name);
+      countryInfo[state.name].push(province);
       countryInfo[province.name] = [];
       provinceList.push(province);
     }
@@ -81,9 +81,8 @@ function processProvince(province, callback) {
     if (data.totalResultsCount == 0) {
     }
     else {
-      var suburbs  = data.geonames;
       $.each(suburbs, function (i, suburb) {
-        countryInfo[province.name].push(suburb.name);
+        countryInfo[province.name].push(suburb);
       });
     }
     callback();
